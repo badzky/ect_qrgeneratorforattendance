@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student QR Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        .input-group {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input {
+            padding: 8px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #qrContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Generate Student QR Code</h2>
+        <div class="input-group">
+            <label for="studentNumber">Student Number:</label>
+            <input type="text" id="studentNumber" placeholder="20240123">
+        </div>
+        <div class="input-group">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" placeholder="Doe">
+        </div>
+        <div class="input-group">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" placeholder="John">
+        </div>
+        <button onclick="generateQRCode()">Generate QR Code</button>
+        <div id="qrContainer"></div>
+    </div>
+
+    <script>
+        let qrInterval;
+
+        function generateQRCode() {
+            clearInterval(qrInterval);
+            const container = document.getElementById("qrContainer");
+            container.innerHTML = "";
+            
+            const studentNumber = document.getElementById("studentNumber").value.trim();
+            const lastName = document.getElementById("lastName").value.trim();
+            const firstName = document.getElementById("firstName").value.trim();
+            
+            if (!studentNumber || !lastName || !firstName) {
+                alert("Please fill in all fields.");
+                return;
+            }
+            
+            function createQR() {
+                container.innerHTML = "";
+                const uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+                const studentData = {
+                    student_number: studentNumber,
+                    last_name: lastName,
+                    first_name: firstName,
+                    unique_code: uniqueCode,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const qrDiv = document.createElement("div");
+                qrDiv.style.margin = "20px";
+                
+                const info = document.createElement("p");
+                info.textContent = `QR Code for: ${studentNumber}, ${lastName}, ${firstName}, ${uniqueCode}`;
+                qrDiv.appendChild(info);
+                
+                new QRCode(qrDiv, {
+                    text: JSON.stringify(studentData),
+                    width: 150,
+                    height: 150
+                });
+                
+                container.appendChild(qrDiv);
+            }
+            
+            createQR();
+            qrInterval = setInterval(createQR, 300000); // Refresh QR code every 5 minutes
+        }
+    </script>
+</body>
+</html>
