@@ -32,7 +32,7 @@
             flex-direction: column;
             align-items: center;
         }
-        input {
+        input, select {
             padding: 8px;
             width: 250px;
             border: 1px solid #ccc;
@@ -71,14 +71,67 @@
             <label for="firstName">First Name:</label>
             <input type="text" id="firstName" placeholder="John">
         </div>
-        <button onclick="generateQRCode()">Generate QR Code</button>
+        <div class="input-group">
+            <label for="course">Select Course:</label>
+            <select id="course">
+                <option value="CE1A">CE1A</option>
+                <option value="CE1B">CE1B</option>
+                <option value="CE2A">CE2A</option>
+                <option value="CE3A">CE3A</option>
+                <option value="CE4A">CE4A</option>
+                <option value="CS1A">CS1A</option>
+                <option value="CS2A">CS2A</option>
+                <option value="CS3A">CS3A</option>
+                <option value="CS4A">CS4A</option>
+                <option value="EN1A">EN1A</option>
+                <option value="EN1B">EN1B</option>
+                <option value="EN2A">EN2A</option>
+                <option value="EN2B">EN2B</option>
+                <option value="EN3A">EN3A</option>
+                <option value="EN4A">EN4A</option>
+                <option value="IT1A">IT1A</option>
+                <option value="IT1B">IT1B</option>
+                <option value="IT1C">IT1C</option>
+                <option value="IT1D">IT1D</option>
+                <option value="IT2A">IT2A</option>
+                <option value="IT2B">IT2B</option>
+                <option value="IT2C">IT2C</option>
+                <option value="IT3A">IT3A</option>
+                <option value="IT4A">IT4A</option>
+            </select>
+        </div>
+        <button onclick="getLocationAndGenerateQRCode()">Generate QR Code</button>
         <div id="qrContainer"></div>
     </div>
 
     <script>
         let qrInterval;
 
-        function generateQRCode() {
+        function getLocationAndGenerateQRCode() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    fetchLocation(position.coords.latitude, position.coords.longitude);
+                }, error => {
+                    alert("Unable to retrieve location. Please enable location services.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function fetchLocation(latitude, longitude) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                .then(response => response.json())
+                .then(data => {
+                    const location = data.display_name || "Unknown Location";
+                    generateQRCode(latitude, longitude, location);
+                })
+                .catch(() => {
+                    generateQRCode(latitude, longitude, "Unknown Location");
+                });
+        }
+
+        function generateQRCode(latitude, longitude, location) {
             clearInterval(qrInterval);
             const container = document.getElementById("qrContainer");
             container.innerHTML = "";
@@ -86,6 +139,7 @@
             const studentNumber = document.getElementById("studentNumber").value.trim();
             const lastName = document.getElementById("lastName").value.trim();
             const firstName = document.getElementById("firstName").value.trim();
+            const course = document.getElementById("course").value;
             
             if (!studentNumber || !lastName || !firstName) {
                 alert("Please fill in all fields.");
@@ -94,24 +148,18 @@
             
             function createQR() {
                 container.innerHTML = "";
-                const uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
-                const studentData = {
-                    student_number: studentNumber,
-                    last_name: lastName,
-                    first_name: firstName,
-                    unique_code: uniqueCode,
-                    timestamp: new Date().toISOString()
-                };
+                const uniqueCode = Math.random().toString(36).substr(2, 5).toUpperCase();
+                const studentData = `${studentNumber},${lastName},${firstName},${course},${uniqueCode},${location},${new Date().toISOString()}`;
                 
                 const qrDiv = document.createElement("div");
                 qrDiv.style.margin = "20px";
                 
                 const info = document.createElement("p");
-                info.textContent = `QR Code for: ${studentNumber}, ${lastName}, ${firstName}, ${uniqueCode}`;
+                info.textContent = `QR Code for: ${studentData}`;
                 qrDiv.appendChild(info);
                 
                 new QRCode(qrDiv, {
-                    text: JSON.stringify(studentData),
+                    text: studentData,
                     width: 150,
                     height: 150
                 });
